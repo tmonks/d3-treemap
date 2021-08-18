@@ -1,10 +1,10 @@
 // margins and dimensions
-const w = 1600;
-const h = 700;
+const w = 1000;
+const h = 800;
 const legendWidth = 300;
 const legendHeight = 40;
 const legendMarginBottom = 20;
-const graphMargin = { top: 100, right: 50, bottom: 100, left: 100 };
+const graphMargin = { top: 100, right: 50, bottom: 50, left: 50 };
 const graphWidth = w - graphMargin.left - graphMargin.right;
 const graphHeight = h - graphMargin.top - graphMargin.bottom;
 
@@ -45,6 +45,9 @@ svg
   .attr("y", 75)
   .html("Top 100 Most Sold Video Games by Platform");
 
+// categorical color scale
+let color = d3.scaleOrdinal(d3.schemeSet3);
+
 d3.json("https://cdn.freecodecamp.org/testable-projects-fcc/data/tree_map/video-game-sales-data.json").then((data) => {
   console.log(data);
   let root = d3.hierarchy(data).sum((d) => d.value);
@@ -63,8 +66,20 @@ d3.json("https://cdn.freecodecamp.org/testable-projects-fcc/data/tree_map/video-
     .attr("width", (d) => d.x1 - d.x0)
     .attr("height", (d) => d.y1 - d.y0)
     .style("stroke", "black")
-    .style("fill", "blue")
-    .attr("class", "cell");
+    .style("fill", (d) => color(d.parent.data.name))
+    .attr("class", "tile")
+    .attr("data-name", (d) => d.data.name)
+    .attr("data-category", (d) => d.parent.data.name)
+    .attr("data-value", (d) => d.data.value)
+    .on("mouseover", (event, d) => {
+      tooltip.transition().duration(100).style("opacity", 0.9); // show the tooltip
+      tooltip
+        .html(`${d.parent.data.name}<br />${d.data.name}<br />${d.data.value}`)
+        .style("left", event.pageX + 10 + "px")
+        .style("top", event.pageY + 10 + "px");
+      tooltip.attr("data-value", d.data.value);
+    })
+    .on("mouseout", (d) => {
+      tooltip.transition().duration(100).style("opacity", 0); // hide the tooltip
+    });
 });
-
-consold;
