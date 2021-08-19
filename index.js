@@ -1,12 +1,13 @@
 // margins and dimensions
 const w = 1000;
 const h = 800;
-const legendWidth = 300;
-const legendHeight = 40;
-const legendMarginBottom = 20;
 const graphMargin = { top: 100, right: 50, bottom: 50, left: 50 };
+const legendHeight = 100;
+const legendColumns = 6;
+const legendMargin = { top: 0, right: 50, bottom: 50, left: 50 };
 const graphWidth = w - graphMargin.left - graphMargin.right;
-const graphHeight = h - graphMargin.top - graphMargin.bottom;
+const graphHeight = h - graphMargin.top - graphMargin.bottom - legendHeight - legendMargin.top - legendMargin.bottom;
+const legendWidth = w - legendMargin.left - legendMargin.right;
 
 // tooltip, hidden by default
 const tooltip = d3.select(".canvas").append("div").attr("id", "tooltip").style("opacity", 0);
@@ -19,6 +20,7 @@ const graph = svg
   .append("g")
   .attr("width", graphWidth)
   .attr("height", graphHeight)
+  .attr("stroke", "blue")
   .attr("transform", `translate(${graphMargin.left}, ${graphMargin.top})`); // move it by margin sizes
 
 // legend area
@@ -27,7 +29,7 @@ const legend = svg
   .attr("width", legendWidth)
   .attr("height", legendHeight)
   .attr("id", "legend")
-  .attr("transform", `translate(${w / 2 - legendWidth / 2}, ${h - legendHeight - 20})`);
+  .attr("transform", `translate(${legendMargin.left}, ${h - legendHeight - legendMargin.bottom})`);
 
 // title
 svg
@@ -82,4 +84,40 @@ d3.json("https://cdn.freecodecamp.org/testable-projects-fcc/data/tree_map/video-
     .on("mouseout", (d) => {
       tooltip.transition().duration(100).style("opacity", 0); // hide the tooltip
     });
+
+  let curColumn = 0;
+  let curRow = 0;
+  let colWidth = legendWidth / legendColumns;
+  let rowHeight = legendHeight / Math.ceil(root.children.length / legendColumns);
+
+  console.log(`legend dimenions: ${legendWidth} x ${legendHeight}`);
+  console.log(`legend rect dimensions: ${colWidth} x ${rowHeight}`);
+
+  root.children.forEach((child, index) => {
+    curColumn = index % legendColumns;
+    curRow = Math.floor(index / legendColumns);
+    console.log(`${index}: ${child.data.name} - ${curColumn}, ${curRow}`);
+    // curX = legendCellX(index);
+  });
+
+  legend
+    .selectAll("rect")
+    .data(root.children)
+    .enter()
+    .append("rect")
+    .attr("x", (d, i) => (i % legendColumns) * colWidth)
+    .attr("y", (d, i) => Math.floor(i / legendColumns) * rowHeight)
+    .attr("width", rowHeight - 2)
+    .attr("height", rowHeight - 2)
+    .attr("fill", (d) => color(d.data.name))
+    .attr("class", "legend-item");
+
+  legend
+    .selectAll("text")
+    .data(root.children)
+    .enter()
+    .append("text")
+    .attr("x", (d, i) => (i % legendColumns) * colWidth + rowHeight + 5)
+    .attr("y", (d, i) => Math.floor(i / legendColumns) * rowHeight + rowHeight)
+    .text((d) => d.data.name);
 });
