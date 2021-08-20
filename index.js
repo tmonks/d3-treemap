@@ -48,7 +48,29 @@ svg
   .html("Top 100 Most Sold Video Games by Platform");
 
 // categorical color scale
-let color = d3.scaleOrdinal(d3.schemeSet3);
+const categoryColors = [
+  "#e6194B",
+  "#3cb44b",
+  "#ffe119",
+  "#4363d8",
+  "#f58231",
+  "#911eb4",
+  "#42d4f4",
+  "#f032e6",
+  "#bfef45",
+  "#fabed4",
+  "#469990",
+  "#dcbeff",
+  "#9A6324",
+  "#fffac8",
+  "#800000",
+  "#aaffc3",
+  "#808000",
+  "#ffd8b1",
+  "#000075",
+  "#a9a9a9",
+];
+let color = d3.scaleOrdinal(categoryColors);
 
 d3.json("https://cdn.freecodecamp.org/testable-projects-fcc/data/tree_map/video-game-sales-data.json").then((data) => {
   console.log(data);
@@ -85,20 +107,8 @@ d3.json("https://cdn.freecodecamp.org/testable-projects-fcc/data/tree_map/video-
       tooltip.transition().duration(100).style("opacity", 0); // hide the tooltip
     });
 
-  let curColumn = 0;
-  let curRow = 0;
   let colWidth = legendWidth / legendColumns;
   let rowHeight = legendHeight / Math.ceil(root.children.length / legendColumns);
-
-  console.log(`legend dimenions: ${legendWidth} x ${legendHeight}`);
-  console.log(`legend rect dimensions: ${colWidth} x ${rowHeight}`);
-
-  root.children.forEach((child, index) => {
-    curColumn = index % legendColumns;
-    curRow = Math.floor(index / legendColumns);
-    console.log(`${index}: ${child.data.name} - ${curColumn}, ${curRow}`);
-    // curX = legendCellX(index);
-  });
 
   legend
     .selectAll("rect")
@@ -109,7 +119,7 @@ d3.json("https://cdn.freecodecamp.org/testable-projects-fcc/data/tree_map/video-
     .attr("y", (d, i) => Math.floor(i / legendColumns) * rowHeight)
     .attr("width", rowHeight - 2)
     .attr("height", rowHeight - 2)
-    .attr("fill", (d) => color(d.data.name))
+    .attr("fill", (d, i) => color(d.data.name))
     .attr("class", "legend-item");
 
   legend
