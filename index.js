@@ -1,6 +1,6 @@
 // margins and dimensions
-const w = 1000;
-const h = 800;
+const w = 1200;
+const h = 1000;
 const graphMargin = { top: 100, right: 50, bottom: 50, left: 50 };
 const legendHeight = 100;
 const legendColumns = 6;
@@ -20,7 +20,6 @@ const graph = svg
   .append("g")
   .attr("width", graphWidth)
   .attr("height", graphHeight)
-  .attr("stroke", "blue")
   .attr("transform", `translate(${graphMargin.left}, ${graphMargin.top})`); // move it by margin sizes
 
 // legend area
@@ -76,7 +75,7 @@ d3.json("https://cdn.freecodecamp.org/testable-projects-fcc/data/tree_map/video-
   console.log(data);
   let root = d3.hierarchy(data).sum((d) => d.value);
 
-  d3.treemap().size([graphWidth, graphHeight]).padding(2)(root);
+  d3.treemap().size([graphWidth, graphHeight]).padding(0)(root);
 
   console.log(root);
 
@@ -107,6 +106,38 @@ d3.json("https://cdn.freecodecamp.org/testable-projects-fcc/data/tree_map/video-
       tooltip.transition().duration(100).style("opacity", 0); // hide the tooltip
     });
 
+  // add text to tiles
+  const minSizeForText = 55;
+  graph
+    .selectAll("text")
+    .data(root.leaves())
+    .enter()
+    .append("text")
+    .selectAll("tspan")
+    .data((d) => {
+      // replace with ellipsis if rect is too small
+      let text = Math.min(d.x1 - d.x0, d.y1 - d.y0) < minSizeForText ? "..." : d.data.name;
+      return text.split(/(?=[A-Z][^A-Z])/g).map((text) => {
+        return {
+          text: text,
+          x0: d.x0,
+          y0: d.y0,
+          width: d.x1 - d.x0,
+          height: d.y1 - d.y0,
+        };
+      });
+    })
+    .enter()
+    .append("tspan")
+    .attr("x", (d) => d.x0 + 2)
+    .attr("y", (d, i) => d.y0 + 12 + i * 10)
+    .text((d) => d.text)
+    .attr("font-size", "0.7em")
+    .attr("fill", "black");
+  // hide the text if the rect is too small
+  // .attr("opacity", (d) => (Math.min(d.width, d.height) < minSizeForText ? 0 : 1));
+
+  // legend
   let colWidth = legendWidth / legendColumns;
   let rowHeight = legendHeight / Math.ceil(root.children.length / legendColumns);
 
@@ -128,6 +159,6 @@ d3.json("https://cdn.freecodecamp.org/testable-projects-fcc/data/tree_map/video-
     .enter()
     .append("text")
     .attr("x", (d, i) => (i % legendColumns) * colWidth + rowHeight + 5)
-    .attr("y", (d, i) => Math.floor(i / legendColumns) * rowHeight + rowHeight)
+    .attr("y", (d, i) => Math.floor(i / legendColumns) * rowHeight + rowHeight - 5)
     .text((d) => d.data.name);
 });
