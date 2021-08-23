@@ -1,6 +1,6 @@
 // margins and dimensions
 const w = 1200;
-const h = 1000;
+const h = 900;
 const graphMargin = { top: 100, right: 50, bottom: 50, left: 50 };
 const legendHeight = 100;
 const legendColumns = 6;
@@ -53,18 +53,18 @@ const categoryColors = [
   "#ffe119",
   "#4363d8",
   "#f58231",
-  "#911eb4",
+  "#A675A1",
   "#42d4f4",
   "#f032e6",
-  "#bfef45",
-  "#fabed4",
+  "#5FDD9D",
+  "#B2675E",
   "#469990",
   "#dcbeff",
   "#9A6324",
   "#fffac8",
-  "#800000",
+  "#CA2E55",
   "#aaffc3",
-  "#808000",
+  "#ACE894",
   "#ffd8b1",
   "#000075",
   "#a9a9a9",
@@ -72,12 +72,14 @@ const categoryColors = [
 let color = d3.scaleOrdinal(categoryColors);
 
 d3.json("https://cdn.freecodecamp.org/testable-projects-fcc/data/tree_map/video-game-sales-data.json").then((data) => {
-  console.log(data);
   let root = d3.hierarchy(data).sum((d) => d.value);
 
   d3.treemap().size([graphWidth, graphHeight]).padding(0)(root);
 
   console.log(root);
+  root.children.forEach((x) => {
+    console.log(x.data.name + ": " + color(x.data.name));
+  });
 
   graph
     .selectAll("rect")
@@ -159,6 +161,6 @@ d3.json("https://cdn.freecodecamp.org/testable-projects-fcc/data/tree_map/video-
     .enter()
     .append("text")
     .attr("x", (d, i) => (i % legendColumns) * colWidth + rowHeight + 5)
-    .attr("y", (d, i) => Math.floor(i / legendColumns) * rowHeight + rowHeight - 5)
+    .attr("y", (d, i) => Math.floor(i / legendColumns) * rowHeight + rowHeight - 12)
     .text((d) => d.data.name);
 });
