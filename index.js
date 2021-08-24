@@ -76,18 +76,22 @@ d3.json("https://cdn.freecodecamp.org/testable-projects-fcc/data/tree_map/video-
 
   d3.treemap().size([graphWidth, graphHeight]).padding(0)(root);
 
-  console.log(root);
-  root.children.forEach((x) => {
-    console.log(x.data.name + ": " + color(x.data.name));
-  });
-
-  graph
-    .selectAll("rect")
-    .data(root.leaves())
+  // add groups to contain the rect, clip path, and text elements
+  let tileGroups = graph
+    .selectAll("g")
+    .data(
+      root.leaves().map((x, i) => {
+        // add a unique id attribute for the clip paths
+        return { id: i + "-" + x.parent.data.name, ...x };
+      })
+    )
     .enter()
+    .append("g")
+    .attr("transform", (d) => `translate(${d.x0}, ${d.y0})`);
+
+  tileGroups
     .append("rect")
-    .attr("x", (d) => d.x0)
-    .attr("y", (d) => d.y0)
+    .attr("id", (d) => d.id)
     .attr("width", (d) => d.x1 - d.x0)
     .attr("height", (d) => d.y1 - d.y0)
     .style("stroke", "black")
@@ -108,41 +112,32 @@ d3.json("https://cdn.freecodecamp.org/testable-projects-fcc/data/tree_map/video-
       tooltip.transition().duration(100).style("opacity", 0); // hide the tooltip
     });
 
+  // add clip paths using the corresponding rect dimensions
+  tileGroups
+    .append("clipPath")
+    .attr("id", (d) => "clip-" + d.id)
+    .append("use")
+    .attr("xlink:href", (d) => "#" + d.id);
+
   // add text to tiles
-  const minSizeForText = 55;
-  graph
-    .selectAll("text")
-    .data(root.leaves())
-    .enter()
+  tileGroups
     .append("text")
+    .attr("clip-path", (d) => `url(#clip-${d.id})`)
     .selectAll("tspan")
-    .data((d) => {
-      // replace with ellipsis if rect is too small
-      let text = Math.min(d.x1 - d.x0, d.y1 - d.y0) < minSizeForText ? "..." : d.data.name;
-      return text.split(/(?=[A-Z][^A-Z])/g).map((text) => {
-        return {
-          text: text,
-          x0: d.x0,
-          y0: d.y0,
-          width: d.x1 - d.x0,
-          height: d.y1 - d.y0,
-        };
-      });
-    })
+    // split each name so we can stack them vertically
+    .data((d) => d.data.name.split(/(?=[A-Z][^A-Z])/g))
     .enter()
     .append("tspan")
-    .attr("x", (d) => d.x0 + 2)
-    .attr("y", (d, i) => d.y0 + 12 + i * 10)
-    .text((d) => d.text)
-    .attr("font-size", "0.7em")
-    .attr("fill", "black");
-  // hide the text if the rect is too small
-  // .attr("opacity", (d) => (Math.min(d.width, d.height) < minSizeForText ? 0 : 1));
+    .attr("x", 2)
+    .attr("y", (d, i) => 12 + i * 10)
+    .text((d) => d)
+    .attr("font-size", "0.7em");
 
-  // legend
+  // legend dimensions
   let colWidth = legendWidth / legendColumns;
   let rowHeight = legendHeight / Math.ceil(root.children.length / legendColumns);
 
+  // legend colored squares
   legend
     .selectAll("rect")
     .data(root.children)
@@ -155,6 +150,7 @@ d3.json("https://cdn.freecodecamp.org/testable-projects-fcc/data/tree_map/video-
     .attr("fill", (d, i) => color(d.data.name))
     .attr("class", "legend-item");
 
+  // legend labels
   legend
     .selectAll("text")
     .data(root.children)
