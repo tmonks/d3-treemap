@@ -1,7 +1,7 @@
 // margins and dimensions
-const w = 1200;
+const w = 1300;
 const h = 900;
-const graphMargin = { top: 100, right: 50, bottom: 50, left: 50 };
+const graphMargin = { top: 100, right: 50, bottom: 25, left: 50 };
 const legendHeight = 100;
 const legendColumns = 6;
 const legendMargin = { top: 0, right: 50, bottom: 50, left: 50 };
@@ -9,7 +9,7 @@ const graphWidth = w - graphMargin.left - graphMargin.right;
 const graphHeight = h - graphMargin.top - graphMargin.bottom - legendHeight - legendMargin.top - legendMargin.bottom;
 const legendWidth = w - legendMargin.left - legendMargin.right;
 
-// tooltip, hidden by default
+// tooltip (hidden by default)
 const tooltip = d3.select(".canvas").append("div").attr("id", "tooltip").style("opacity", 0);
 
 // main svg
@@ -74,7 +74,9 @@ let color = d3.scaleOrdinal(categoryColors);
 d3.json("https://cdn.freecodecamp.org/testable-projects-fcc/data/tree_map/video-game-sales-data.json").then((data) => {
   let root = d3.hierarchy(data).sum((d) => d.value);
 
+  console.log(root);
   d3.treemap().size([graphWidth, graphHeight]).padding(0)(root);
+  console.log(root);
 
   // add groups to contain the rect, clip path, and text elements
   let tileGroups = graph
@@ -89,9 +91,10 @@ d3.json("https://cdn.freecodecamp.org/testable-projects-fcc/data/tree_map/video-
     .append("g")
     .attr("transform", (d) => `translate(${d.x0}, ${d.y0})`);
 
+  // add colored tiles for each leaf
   tileGroups
     .append("rect")
-    .attr("id", (d) => d.id)
+    .attr("id", (d) => d.id) // set an id so it can be referenced by the clip path
     .attr("width", (d) => d.x1 - d.x0)
     .attr("height", (d) => d.y1 - d.y0)
     .style("stroke", "black")
@@ -124,18 +127,18 @@ d3.json("https://cdn.freecodecamp.org/testable-projects-fcc/data/tree_map/video-
     .append("text")
     .attr("clip-path", (d) => `url(#clip-${d.id})`)
     .selectAll("tspan")
-    // split each name so we can stack them vertically
+    // split on capital letters, so titles can be broken up into lines
     .data((d) => d.data.name.split(/(?=[A-Z][^A-Z])/g))
     .enter()
     .append("tspan")
     .attr("x", 2)
-    .attr("y", (d, i) => 12 + i * 10)
+    .attr("y", (d, i) => 12 + i * 12)
     .text((d) => d)
-    .attr("font-size", "0.7em");
+    .attr("font-size", "0.8em");
 
-  // legend dimensions
-  let colWidth = legendWidth / legendColumns;
-  let rowHeight = legendHeight / Math.ceil(root.children.length / legendColumns);
+  // legend cell dimensions
+  let legendCellWidth = legendWidth / legendColumns;
+  let legendCellHeight = legendHeight / Math.ceil(root.children.length / legendColumns);
 
   // legend colored squares
   legend
@@ -143,10 +146,10 @@ d3.json("https://cdn.freecodecamp.org/testable-projects-fcc/data/tree_map/video-
     .data(root.children)
     .enter()
     .append("rect")
-    .attr("x", (d, i) => (i % legendColumns) * colWidth)
-    .attr("y", (d, i) => Math.floor(i / legendColumns) * rowHeight)
-    .attr("width", rowHeight - 2)
-    .attr("height", rowHeight - 2)
+    .attr("x", (d, i) => (i % legendColumns) * legendCellWidth)
+    .attr("y", (d, i) => Math.floor(i / legendColumns) * legendCellHeight)
+    .attr("width", legendCellHeight - 2)
+    .attr("height", legendCellHeight - 2)
     .attr("fill", (d, i) => color(d.data.name))
     .attr("class", "legend-item");
 
@@ -156,7 +159,7 @@ d3.json("https://cdn.freecodecamp.org/testable-projects-fcc/data/tree_map/video-
     .data(root.children)
     .enter()
     .append("text")
-    .attr("x", (d, i) => (i % legendColumns) * colWidth + rowHeight + 5)
-    .attr("y", (d, i) => Math.floor(i / legendColumns) * rowHeight + rowHeight - 12)
+    .attr("x", (d, i) => (i % legendColumns) * legendCellWidth + legendCellHeight + 5)
+    .attr("y", (d, i) => Math.floor(i / legendColumns) * legendCellHeight + legendCellHeight - 12)
     .text((d) => d.data.name);
 });
