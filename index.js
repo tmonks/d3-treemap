@@ -11,6 +11,8 @@ const legendWidth = w - legendMargin.left - legendMargin.right;
 
 // tooltip (hidden by default)
 const tooltip = d3.select(".canvas").append("div").attr("id", "tooltip").style("opacity", 0);
+const tooltipOffsetRight = 10;
+const tooltipOffsetDown = 20;
 
 // main svg
 const svg = d3.select(".canvas").append("svg").attr("width", w).attr("height", h);
@@ -74,9 +76,7 @@ let color = d3.scaleOrdinal(categoryColors);
 d3.json("https://cdn.freecodecamp.org/testable-projects-fcc/data/tree_map/video-game-sales-data.json").then((data) => {
   let root = d3.hierarchy(data).sum((d) => d.value);
 
-  console.log(root);
   d3.treemap().size([graphWidth, graphHeight]).padding(0)(root);
-  console.log(root);
 
   // add groups to contain the rect, clip path, and text elements
   let tileGroups = graph
@@ -107,9 +107,14 @@ d3.json("https://cdn.freecodecamp.org/testable-projects-fcc/data/tree_map/video-
       tooltip.transition().duration(100).style("opacity", 0.9); // show the tooltip
       tooltip
         .html(`${d.parent.data.name}<br />${d.data.name}<br />${d.data.value}`)
-        .style("left", event.pageX + 10 + "px")
-        .style("top", event.pageY + 10 + "px");
+        .style("left", event.pageX + tooltipOffsetRight + "px")
+        .style("top", event.pageY + tooltipOffsetDown + "px");
       tooltip.attr("data-value", d.data.value);
+    })
+    .on("mousemove", (event) => {
+      tooltip
+        .style("left", event.pageX + tooltipOffsetRight + "px")
+        .style("top", event.pageY + tooltipOffsetDown + "px");
     })
     .on("mouseout", (d) => {
       tooltip.transition().duration(100).style("opacity", 0); // hide the tooltip
@@ -148,9 +153,10 @@ d3.json("https://cdn.freecodecamp.org/testable-projects-fcc/data/tree_map/video-
     .append("rect")
     .attr("x", (d, i) => (i % legendColumns) * legendCellWidth)
     .attr("y", (d, i) => Math.floor(i / legendColumns) * legendCellHeight)
-    .attr("width", legendCellHeight - 2)
-    .attr("height", legendCellHeight - 2)
+    .attr("width", legendCellHeight - 5)
+    .attr("height", legendCellHeight - 5)
     .attr("fill", (d, i) => color(d.data.name))
+    .attr("stroke", "black")
     .attr("class", "legend-item");
 
   // legend labels
